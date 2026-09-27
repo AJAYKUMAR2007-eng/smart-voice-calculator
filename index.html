@@ -26,27 +26,36 @@
     background: var(--bg);
     color: var(--paper);
     font-family:'Space Grotesk', sans-serif;
-    display:flex; align-items:center; justify-content:center;
-    padding:24px;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:48px 24px 24px;
   }
   .app{ width:100%; max-width:380px; }
   .plate{
-    display:flex; justify-content:space-between; align-items:center;
+    text-align:center;
+    margin-bottom:26px;
+  }
+  .plate-text{
+    font-size:22px;
+    color:var(--paper);
+    letter-spacing:0.01em;
     margin-bottom:16px;
   }
-  .plate-text{ font-size:15px; color:#d8cdae; letter-spacing:0.01em; }
-  .plate-text b{ color:var(--paper); }
-  .levers{ display:flex; gap:10px; }
+  .plate-text b{ color:var(--brass); }
+  .levers{ display:flex; gap:10px; justify-content:center; }
   .lever{
-    width:46px; height:46px; border-radius:50%;
+    flex:1;
+    max-width:160px;
+    height:46px;
+    border-radius:23px;
     background: radial-gradient(circle at 32% 28%, var(--key-hi), var(--key-body) 70%);
     border:1px solid #0e2018;
     box-shadow: 0 3px 0 #0e2018, inset 0 1px 0 rgba(255,255,255,0.08);
     color: var(--brass);
-    display:flex; align-items:center; justify-content:center;
+    display:flex; align-items:center; justify-content:center; gap:8px;
     cursor:pointer;
+    font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:500;
   }
-  .lever svg{ width:18px; height:18px; }
+  .lever svg{ width:17px; height:17px; flex-shrink:0; }
   .lever.listening{
     color:#1a1204; background: var(--brass);
     box-shadow: 0 3px 0 var(--brass-dark), 0 0 0 5px rgba(201,138,67,0.18);
@@ -54,8 +63,9 @@
   .tape{
     background: var(--paper);
     color: var(--ink);
-    padding: 18px 16px 14px;
+    padding: 26px 16px 20px;
     position:relative;
+    border-radius: 16px 16px 0 0;
   }
   .perf-bottom{
     height:8px;
@@ -80,8 +90,8 @@
   }
   .keys{
     background: var(--housing);
-    padding:16px 12px;
-    display:grid; grid-template-columns:repeat(4,1fr); gap:10px;
+    padding:22px 12px;
+    display:grid; grid-template-columns:repeat(4,1fr); gap:13px;
     border-left:1px solid #0e2018; border-right:1px solid #0e2018;
   }
   button.key{
@@ -113,17 +123,24 @@
   button.key.ghost:active{ box-shadow: 0 1px 0 #7a3d28; }
   .roll{
     background: var(--paper); color: var(--ink);
-    padding: 14px 16px 16px;
-    border-radius: 0 0 6px 6px;
+    padding: 18px 16px 22px;
+    border-radius: 0 0 16px 16px;
   }
   .roll-head{
-    display:flex; justify-content:space-between; align-items:baseline;
-    margin-bottom:8px;
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:10px;
   }
-  .roll-title{ font-size:12px; color:var(--ink-soft); }
+  .roll-head button{
+    font-family:'Space Grotesk', sans-serif; font-size:11.5px; font-weight:500;
+    padding:6px 13px; border-radius:14px; cursor:pointer;
+  }
+  .history-tag{
+    background: var(--housing); color: var(--paper);
+    border:1px solid var(--brass-dark);
+  }
   .clear-history{
-    background:none; border:none; color:var(--danger);
-    font-family:'Space Grotesk', sans-serif; font-size:12px; cursor:pointer; padding:2px 4px;
+    background:transparent; color:var(--danger);
+    border:1px solid var(--danger);
   }
   .history-list{
     display:flex; flex-direction:column; gap:6px;
@@ -156,6 +173,7 @@
           <path d="M17 8a5 5 0 0 1 0 8"></path>
           <path d="M19.5 5.5a9 9 0 0 1 0 13"></path>
         </svg>
+        <span>Speak</span>
       </button>
       <button class="lever" id="micBtn" title="Speak a calculation" aria-label="Start voice input">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -164,6 +182,7 @@
           <line x1="12" y1="18" x2="12" y2="22"></line>
           <line x1="8" y1="22" x2="16" y2="22"></line>
         </svg>
+        <span>Voice</span>
       </button>
     </div>
   </div>
@@ -204,7 +223,7 @@
   <div class="perf-bottom"></div>
   <div class="roll">
     <div class="roll-head">
-      <div class="roll-title">History</div>
+      <button class="history-tag" type="button">History</button>
       <button class="clear-history" id="clearHistoryBtn">Clear</button>
     </div>
     <div class="history-list" id="historyList"></div>
