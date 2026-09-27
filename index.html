@@ -38,8 +38,9 @@
   .label-row{
     display:flex;
     justify-content:space-between;
-    align-items:baseline;
+    align-items:center;
     margin-bottom:14px;
+    gap:10px;
   }
   .app-name{
     font-size:15px;
@@ -47,8 +48,12 @@
     color:var(--muted);
   }
   .app-name b{ color:var(--text); font-weight:600; }
-  .mic-btn{
-    width:52px; height:52px;
+  .icon-btns{
+    display:flex;
+    gap:8px;
+  }
+  .icon-btn{
+    width:44px; height:44px;
     border-radius:50%;
     border:1px solid var(--panel-edge);
     background:var(--panel);
@@ -56,9 +61,10 @@
     display:flex; align-items:center; justify-content:center;
     cursor:pointer;
     transition: box-shadow .2s ease, background .2s ease, border-color .2s ease;
+    flex-shrink:0;
   }
-  .mic-btn svg{ width:22px; height:22px; }
-  .mic-btn.listening{
+  .icon-btn svg{ width:19px; height:19px; }
+  .icon-btn.listening{
     background: var(--accent-dim);
     border-color: var(--accent);
     box-shadow: 0 0 0 6px rgba(232,163,61,0.12);
@@ -122,10 +128,24 @@
   .history{
     margin-top:18px;
   }
+  .history-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:8px;
+  }
   .history-title{
     font-size:12px;
     color:var(--muted);
-    margin-bottom:8px;
+  }
+  .clear-history{
+    background:none;
+    border:none;
+    color:var(--danger);
+    font-family:'Space Grotesk', sans-serif;
+    font-size:12px;
+    cursor:pointer;
+    padding:2px 4px;
   }
   .history-list{
     display:flex;
@@ -144,6 +164,12 @@
     padding-bottom:6px;
   }
   .history-item span:last-child{ color:var(--text); }
+  .history-empty{
+    font-size:12.5px;
+    color:var(--muted);
+    font-style:italic;
+    padding:4px 0;
+  }
   .hint{
     margin-top:12px;
     font-size:11.5px;
@@ -160,14 +186,23 @@
 <div class="app">
   <div class="label-row">
     <div class="app-name"><b>Smart</b> Voice Calculator</div>
-    <button class="mic-btn" id="micBtn" title="Speak a calculation" aria-label="Start voice input">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
-        <path d="M19 10v1a7 7 0 0 1-14 0v-1"></path>
-        <line x1="12" y1="18" x2="12" y2="22"></line>
-        <line x1="8" y1="22" x2="16" y2="22"></line>
-      </svg>
-    </button>
+    <div class="icon-btns">
+      <button class="icon-btn" id="speakBtn" title="Repeat answer" aria-label="Repeat answer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="4 8 8 8 13 4 13 20 8 16 4 16 4 8"></polygon>
+          <path d="M17 8a5 5 0 0 1 0 8"></path>
+          <path d="M19.5 5.5a9 9 0 0 1 0 13"></path>
+        </svg>
+      </button>
+      <button class="icon-btn" id="micBtn" title="Speak a calculation" aria-label="Start voice input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v1a7 7 0 0 1-14 0v-1"></path>
+          <line x1="12" y1="18" x2="12" y2="22"></line>
+          <line x1="8" y1="22" x2="16" y2="22"></line>
+        </svg>
+      </button>
+    </div>
   </div>
 
   <div class="display">
@@ -203,11 +238,14 @@
   </div>
 
   <div class="history">
-    <div class="history-title">History</div>
+    <div class="history-head">
+      <div class="history-title">History</div>
+      <button class="clear-history" id="clearHistoryBtn">Clear</button>
+    </div>
     <div class="history-list" id="historyList"></div>
   </div>
 
-  <div class="hint">Tap the mic and say something like "twelve plus eight" or "forty divided by five percent of two hundred".</div>
+  <div class="hint">Tap the mic and say something like "twelve plus eight". Tap the speaker icon anytime to hear the current answer again.</div>
 </div>
 
 <script>
@@ -216,6 +254,8 @@
   const resultEl = document.getElementById('result');
   const heardEl = document.getElementById('heard');
   const micBtn = document.getElementById('micBtn');
+  const speakBtn = document.getElementById('speakBtn');
+  const clearHistoryBtn = document.getElementById('clearHistoryBtn');
   const keys = document.getElementById('keys');
   const historyList = document.getElementById('historyList');
 
@@ -299,14 +339,19 @@
     render();
   });
 
+  // commit() computes the result, saves it to history, and speaks it aloud —
+  // used by both the keypad "=" button and by voice input.
   function commit(){
     const val = safeEval(expr);
     if (val === null || expr === '') return;
-    addHistory(expr, formatNum(val));
-    expr = formatNum(val);
+    const formatted = formatNum(val);
+    addHistory(expr, formatted);
+    expr = formatted;
     render();
+    speak(formatted);
   }
 
+  // --- History ---
   function addHistory(exp, val){
     const list = JSON.parse(localStorage.getItem('svc_history') || '[]');
     list.unshift({exp, val});
@@ -315,6 +360,10 @@
   }
   function renderHistory(){
     const list = JSON.parse(localStorage.getItem('svc_history') || '[]');
+    if (!list.length){
+      historyList.innerHTML = '<div class="history-empty">No calculations yet.</div>';
+      return;
+    }
     historyList.innerHTML = list.map(item =>
       `<div class="history-item"><span>${escapeHtml(item.exp)}</span><span>${escapeHtml(item.val)}</span></div>`
     ).join('');
@@ -322,6 +371,23 @@
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+  clearHistoryBtn.addEventListener('click', () => {
+    localStorage.removeItem('svc_history');
+    renderHistory();
+  });
+
+  // --- Text-to-speech: repeat / speak the current answer ---
+  function speak(text){
+    if (!('speechSynthesis' in window) || !text) return;
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utter);
+  }
+  speakBtn.addEventListener('click', () => {
+    const current = resultEl.textContent || exprEl.textContent || '0';
+    speak(current);
+  });
 
   // --- Voice recognition ---
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -343,7 +409,7 @@
       recognizing = false;
       micBtn.classList.remove('listening');
     };
-    recognition.onerror = (e) => {
+    recognition.onerror = () => {
       recognizing = false;
       micBtn.classList.remove('listening');
       heardEl.textContent = 'Could not hear that — try again.';
@@ -354,8 +420,7 @@
       const parsed = wordsToExpression(said);
       if (parsed){
         expr = parsed;
-        commit();
-        speak(resultEl.textContent);
+        commit(); // commit() already speaks the result
       } else {
         heardEl.textContent = '"' + said + '" — didn\'t catch a calculation.';
       }
@@ -370,14 +435,6 @@
     else recognition.start();
   });
 
-  function speak(text){
-    if (!('speechSynthesis' in window)) return;
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 1;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utter);
-  }
-
   // Convert spoken words to a math expression string
   function wordsToExpression(said){
     let s = ' ' + said.toLowerCase().trim() + ' ';
@@ -391,7 +448,6 @@
     };
     const scaleWords = { hundred:100, thousand:1000, million:1000000 };
 
-    // operator phrases -> symbols (longer phrases first)
     const opReplacements = [
       [/\bdivided by\b/g, ' / '],
       [/\bdivide by\b/g, ' / '],
@@ -411,7 +467,6 @@
     ];
     for (const [re, rep] of opReplacements) s = s.replace(re, rep);
 
-    // expand word numbers like "twenty five" / "one hundred and fifty"
     s = s.replace(/\band\b/g, ' ');
     const tokens = s.split(/\s+/).filter(Boolean);
     const out = [];
@@ -438,9 +493,7 @@
     }
     let joined = out.join(' ');
 
-    // collapse "12 . 5" -> "12.5"
     joined = joined.replace(/(\d)\s*\.\s*(\d)/g, '$1.$2');
-    // keep only characters relevant to a math expression
     joined = joined.replace(/[^0-9+\-*/%.() ]/g, ' ');
     joined = joined.replace(/\s+/g, ' ').trim();
 
