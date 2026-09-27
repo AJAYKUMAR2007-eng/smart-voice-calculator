@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Voice Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #10161b;
+    --panel: #1a232a;
+    --panel-edge: #263139;
+    --text: #f2efe9;
+    --muted: #8a97a0;
+    --accent: #e8a33d;
+    --accent-dim: #4a3a1f;
+    --op: #2d3940;
+    --op-text: #cfe8e0;
+    --danger: #c1584a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family:'Space Grotesk', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .app{
+    width:100%;
+    max-width:380px;
+  }
+  .label-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:14px;
+  }
+  .app-name{
+    font-size:15px;
+    letter-spacing:0.02em;
+    color:var(--muted);
+  }
+  .app-name b{ color:var(--text); font-weight:600; }
+  .mic-btn{
+    width:52px; height:52px;
+    border-radius:50%;
+    border:1px solid var(--panel-edge);
+    background:var(--panel);
+    color:var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition: box-shadow .2s ease, background .2s ease, border-color .2s ease;
+  }
+  .mic-btn svg{ width:22px; height:22px; }
+  .mic-btn.listening{
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 6px rgba(232,163,61,0.12);
+  }
+  .display{
+    background:var(--panel);
+    border:1px solid var(--panel-edge);
+    border-radius:14px;
+    padding:20px 18px;
+    margin-bottom:14px;
+    min-height:96px;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    gap:6px;
+  }
+  .heard{
+    font-size:12.5px;
+    color:var(--muted);
+    min-height:16px;
+    font-style:italic;
+    overflow-wrap:anywhere;
+  }
+  .expression{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+    color:var(--muted);
+    min-height:18px;
+    text-align:right;
+    overflow-wrap:anywhere;
+  }
+  .result{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:38px;
+    font-weight:500;
+    text-align:right;
+    letter-spacing:-0.01em;
+    overflow-wrap:anywhere;
+  }
+  .keys{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:9px;
+  }
+  button.key{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:18px;
+    padding:16px 0;
+    border-radius:10px;
+    border:1px solid var(--panel-edge);
+    background:var(--panel);
+    color:var(--text);
+    cursor:pointer;
+    transition: transform .06s ease, background .15s ease;
+  }
+  button.key:active{ transform: scale(0.96); }
+  button.key.op{ background:var(--op); color:var(--op-text); }
+  button.key.accent{ background:var(--accent); color:#1a1204; border-color:var(--accent); font-weight:600; }
+  button.key.wide{ grid-column: span 2; }
+  button.key.ghost{ color:var(--danger); border-color:var(--danger); background:transparent; }
+  .history{
+    margin-top:18px;
+  }
+  .history-title{
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  .history-list{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    max-height:140px;
+    overflow-y:auto;
+  }
+  .history-item{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+    border-bottom:1px solid var(--panel-edge);
+    padding-bottom:6px;
+  }
+  .history-item span:last-child{ color:var(--text); }
+  .hint{
+    margin-top:12px;
+    font-size:11.5px;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.5;
+  }
+  ::-webkit-scrollbar{ width:6px; }
+  ::-webkit-scrollbar-thumb{ background:var(--panel-edge); border-radius:3px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="label-row">
+    <div class="app-name"><b>Smart</b> Voice Calculator</div>
+    <button class="mic-btn" id="micBtn" title="Speak a calculation" aria-label="Start voice input">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+        <path d="M19 10v1a7 7 0 0 1-14 0v-1"></path>
+        <line x1="12" y1="18" x2="12" y2="22"></line>
+        <line x1="8" y1="22" x2="16" y2="22"></line>
+      </svg>
+    </button>
+  </div>
+
+  <div class="display">
+    <div class="heard" id="heard"></div>
+    <div class="expression" id="expression">0</div>
+    <div class="result" id="result">0</div>
+  </div>
+
+  <div class="keys" id="keys">
+    <button class="key ghost" data-action="clear">C</button>
+    <button class="key op" data-action="backspace">⌫</button>
+    <button class="key op" data-val="%">%</button>
+    <button class="key op" data-val="/">÷</button>
+
+    <button class="key" data-val="7">7</button>
+    <button class="key" data-val="8">8</button>
+    <button class="key" data-val="9">9</button>
+    <button class="key op" data-val="*">×</button>
+
+    <button class="key" data-val="4">4</button>
+    <button class="key" data-val="5">5</button>
+    <button class="key" data-val="6">6</button>
+    <button class="key op" data-val="-">−</button>
+
+    <button class="key" data-val="1">1</button>
+    <button class="key" data-val="2">2</button>
+    <button class="key" data-val="3">3</button>
+    <button class="key op" data-val="+">+</button>
+
+    <button class="key wide" data-val="0">0</button>
+    <button class="key" data-val=".">.</button>
+    <button class="key accent" data-action="equals">=</button>
+  </div>
+
+  <div class="history">
+    <div class="history-title">History</div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+
+  <div class="hint">Tap the mic and say something like "twelve plus eight" or "forty divided by five percent of two hundred".</div>
+</div>
+
+<script>
+(function(){
+  const exprEl = document.getElementById('expression');
+  const resultEl = document.getElementById('result');
+  const heardEl = document.getElementById('heard');
+  const micBtn = document.getElementById('micBtn');
+  const keys = document.getElementById('keys');
+  const historyList = document.getElementById('historyList');
+
+  let expr = '';
+
+  function render(){
+    exprEl.textContent = expr || '0';
+    const val = safeEval(expr);
+    resultEl.textContent = val === null ? '' : formatNum(val);
+  }
+
+  function formatNum(n){
+    if (!isFinite(n)) return 'Error';
+    const rounded = Math.round(n * 1e9) / 1e9;
+    return rounded.toString();
+  }
+
+  // --- Safe expression evaluator (recursive descent, no eval()) ---
+  function safeEval(str){
+    if (!str) return null;
+    try{
+      const tokens = tokenize(str);
+      if (!tokens.length) return null;
+      const pos = {i:0};
+      const val = parseExpr(tokens, pos);
+      if (pos.i !== tokens.length) return null;
+      return val;
+    }catch(e){ return null; }
+  }
+  function tokenize(str){
+    const out = [];
+    const re = /\d+\.?\d*|\.\d+|[+\-*/%()]/g;
+    let m;
+    while((m = re.exec(str))) out.push(m[0]);
+    return out;
+  }
+  function parseExpr(t, p){
+    let left = parseTerm(t, p);
+    while (t[p.i] === '+' || t[p.i] === '-'){
+      const op = t[p.i++];
+      const right = parseTerm(t, p);
+      left = op === '+' ? left + right : left - right;
+    }
+    return left;
+  }
+  function parseTerm(t, p){
+    let left = parseFactor(t, p);
+    while (t[p.i] === '*' || t[p.i] === '/' || t[p.i] === '%'){
+      const op = t[p.i++];
+      const right = parseFactor(t, p);
+      if (op === '*') left = left * right;
+      else if (op === '/') left = left / right;
+      else left = left % right;
+    }
+    return left;
+  }
+  function parseFactor(t, p){
+    if (t[p.i] === '-'){ p.i++; return -parseFactor(t, p); }
+    if (t[p.i] === '('){
+      p.i++;
+      const v = parseExpr(t, p);
+      if (t[p.i] === ')') p.i++;
+      return v;
+    }
+    const tok = t[p.i];
+    if (tok === undefined || isNaN(parseFloat(tok))) throw new Error('bad token');
+    p.i++;
+    return parseFloat(tok);
+  }
+
+  // --- Keypad ---
+  keys.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const val = btn.dataset.val;
+    const action = btn.dataset.action;
+    if (val !== undefined) expr += val;
+    else if (action === 'clear') expr = '';
+    else if (action === 'backspace') expr = expr.slice(0, -1);
+    else if (action === 'equals') commit();
+    render();
+  });
+
+  function commit(){
+    const val = safeEval(expr);
+    if (val === null || expr === '') return;
+    addHistory(expr, formatNum(val));
+    expr = formatNum(val);
+    render();
+  }
+
+  function addHistory(exp, val){
+    const list = JSON.parse(localStorage.getItem('svc_history') || '[]');
+    list.unshift({exp, val});
+    localStorage.setItem('svc_history', JSON.stringify(list.slice(0, 20)));
+    renderHistory();
+  }
+  function renderHistory(){
+    const list = JSON.parse(localStorage.getItem('svc_history') || '[]');
+    historyList.innerHTML = list.map(item =>
+      `<div class="history-item"><span>${escapeHtml(item.exp)}</span><span>${escapeHtml(item.val)}</span></div>`
+    ).join('');
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // --- Voice recognition ---
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognizing = false;
+  let recognition = null;
+
+  if (SpeechRecognition){
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      recognizing = true;
+      micBtn.classList.add('listening');
+      heardEl.textContent = 'Listening…';
+    };
+    recognition.onend = () => {
+      recognizing = false;
+      micBtn.classList.remove('listening');
+    };
+    recognition.onerror = (e) => {
+      recognizing = false;
+      micBtn.classList.remove('listening');
+      heardEl.textContent = 'Could not hear that — try again.';
+    };
+    recognition.onresult = (e) => {
+      const said = e.results[0][0].transcript;
+      heardEl.textContent = '"' + said + '"';
+      const parsed = wordsToExpression(said);
+      if (parsed){
+        expr = parsed;
+        commit();
+        speak(resultEl.textContent);
+      } else {
+        heardEl.textContent = '"' + said + '" — didn\'t catch a calculation.';
+      }
+    };
+  } else {
+    micBtn.style.display = 'none';
+  }
+
+  micBtn.addEventListener('click', () => {
+    if (!recognition) return;
+    if (recognizing) recognition.stop();
+    else recognition.start();
+  });
+
+  function speak(text){
+    if (!('speechSynthesis' in window)) return;
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utter);
+  }
+
+  // Convert spoken words to a math expression string
+  function wordsToExpression(said){
+    let s = ' ' + said.toLowerCase().trim() + ' ';
+
+    const numberWords = {
+      zero:'0', one:'1', two:'2', three:'3', four:'4', five:'5', six:'6',
+      seven:'7', eight:'8', nine:'9', ten:'10', eleven:'11', twelve:'12',
+      thirteen:'13', fourteen:'14', fifteen:'15', sixteen:'16', seventeen:'17',
+      eighteen:'18', nineteen:'19', twenty:'20', thirty:'30', forty:'40',
+      fifty:'50', sixty:'60', seventy:'70', eighty:'80', ninety:'90'
+    };
+    const scaleWords = { hundred:100, thousand:1000, million:1000000 };
+
+    // operator phrases -> symbols (longer phrases first)
+    const opReplacements = [
+      [/\bdivided by\b/g, ' / '],
+      [/\bdivide by\b/g, ' / '],
+      [/\bmultiplied by\b/g, ' * '],
+      [/\btimes\b/g, ' * '],
+      [/\bplus\b/g, ' + '],
+      [/\badded to\b/g, ' + '],
+      [/\bminus\b/g, ' - '],
+      [/\bsubtract(ed)? from\b/g, ' - '],
+      [/\bmodulo\b/g, ' % '],
+      [/\bmod\b/g, ' % '],
+      [/\bpercent of\b/g, ' * 0.01 * '],
+      [/\bpercent\b/g, ' * 0.01 '],
+      [/\bpoint\b/g, ' . '],
+      [/\bopen bracket\b/g, ' ( '],
+      [/\bclose bracket\b/g, ' ) ']
+    ];
+    for (const [re, rep] of opReplacements) s = s.replace(re, rep);
+
+    // expand word numbers like "twenty five" / "one hundred and fifty"
+    s = s.replace(/\band\b/g, ' ');
+    const tokens = s.split(/\s+/).filter(Boolean);
+    const out = [];
+    let i = 0;
+    while (i < tokens.length){
+      const tok = tokens[i];
+      if (numberWords[tok] !== undefined || scaleWords[tok] !== undefined){
+        let total = 0, current = 0;
+        while (i < tokens.length && (numberWords[tokens[i]] !== undefined || scaleWords[tokens[i]] !== undefined)){
+          const t = tokens[i];
+          if (numberWords[t] !== undefined){
+            current += parseInt(numberWords[t], 10);
+          } else {
+            current = current === 0 ? scaleWords[t] : current * scaleWords[t];
+            if (scaleWords[t] >= 1000){ total += current; current = 0; }
+          }
+          i++;
+        }
+        out.push(String(total + current));
+      } else {
+        out.push(tok);
+        i++;
+      }
+    }
+    let joined = out.join(' ');
+
+    // collapse "12 . 5" -> "12.5"
+    joined = joined.replace(/(\d)\s*\.\s*(\d)/g, '$1.$2');
+    // keep only characters relevant to a math expression
+    joined = joined.replace(/[^0-9+\-*/%.() ]/g, ' ');
+    joined = joined.replace(/\s+/g, ' ').trim();
+
+    return safeEval(joined) !== null ? joined : null;
+  }
+
+  renderHistory();
+  render();
+})();
+</script>
+
+</body>
+</html>
