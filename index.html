@@ -5,196 +5,159 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Smart Voice Calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #10161b;
-    --panel: #1a232a;
-    --panel-edge: #263139;
-    --text: #f2efe9;
-    --muted: #8a97a0;
-    --accent: #e8a33d;
-    --accent-dim: #4a3a1f;
-    --op: #2d3940;
-    --op-text: #cfe8e0;
-    --danger: #c1584a;
+    --bg: #13271d;
+    --housing: #1b3a2b;
+    --paper: #f4ecd8;
+    --paper-edge: #cabb92;
+    --ink: #2e2417;
+    --ink-soft: #8a7a5c;
+    --brass: #c98a43;
+    --brass-dark: #8f5e28;
+    --key-body: #1f4636;
+    --key-hi: #2c5c48;
+    --danger: #b2603f;
   }
   *{box-sizing:border-box;}
   body{
-    margin:0;
-    min-height:100vh;
+    margin:0; min-height:100vh;
     background: var(--bg);
-    color: var(--text);
+    color: var(--paper);
     font-family:'Space Grotesk', sans-serif;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    display:flex; align-items:center; justify-content:center;
     padding:24px;
   }
-  .app{
-    width:100%;
-    max-width:380px;
+  .app{ width:100%; max-width:380px; }
+  .plate{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:16px;
   }
-  .label-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:14px;
-    gap:10px;
-  }
-  .app-name{
-    font-size:15px;
-    letter-spacing:0.02em;
-    color:var(--muted);
-  }
-  .app-name b{ color:var(--text); font-weight:600; }
-  .icon-btns{
-    display:flex;
-    gap:8px;
-  }
-  .icon-btn{
-    width:44px; height:44px;
-    border-radius:50%;
-    border:1px solid var(--panel-edge);
-    background:var(--panel);
-    color:var(--accent);
+  .plate-text{ font-size:15px; color:#d8cdae; letter-spacing:0.01em; }
+  .plate-text b{ color:var(--paper); }
+  .levers{ display:flex; gap:10px; }
+  .lever{
+    width:46px; height:46px; border-radius:50%;
+    background: radial-gradient(circle at 32% 28%, var(--key-hi), var(--key-body) 70%);
+    border:1px solid #0e2018;
+    box-shadow: 0 3px 0 #0e2018, inset 0 1px 0 rgba(255,255,255,0.08);
+    color: var(--brass);
     display:flex; align-items:center; justify-content:center;
     cursor:pointer;
-    transition: box-shadow .2s ease, background .2s ease, border-color .2s ease;
-    flex-shrink:0;
   }
-  .icon-btn svg{ width:19px; height:19px; }
-  .icon-btn.listening{
-    background: var(--accent-dim);
-    border-color: var(--accent);
-    box-shadow: 0 0 0 6px rgba(232,163,61,0.12);
+  .lever svg{ width:18px; height:18px; }
+  .lever.listening{
+    color:#1a1204; background: var(--brass);
+    box-shadow: 0 3px 0 var(--brass-dark), 0 0 0 5px rgba(201,138,67,0.18);
   }
-  .display{
-    background:var(--panel);
-    border:1px solid var(--panel-edge);
-    border-radius:14px;
-    padding:20px 18px;
-    margin-bottom:14px;
-    min-height:96px;
-    display:flex;
-    flex-direction:column;
-    justify-content:flex-end;
-    gap:6px;
+  .tape{
+    background: var(--paper);
+    color: var(--ink);
+    padding: 18px 16px 14px;
+    position:relative;
+  }
+  .perf-bottom{
+    height:8px;
+    background-image: radial-gradient(circle, var(--bg) 3.4px, transparent 3.6px);
+    background-size: 14px 8px;
+    background-position: -3px 0;
   }
   .heard{
-    font-size:12.5px;
-    color:var(--muted);
-    min-height:16px;
-    font-style:italic;
-    overflow-wrap:anywhere;
+    font-family:'Special Elite', monospace;
+    font-size:12px; font-style:italic; color:var(--ink-soft);
+    min-height:15px; overflow-wrap:anywhere;
   }
   .expression{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:15px;
-    color:var(--muted);
-    min-height:18px;
-    text-align:right;
-    overflow-wrap:anywhere;
+    font-family:'Special Elite', monospace;
+    font-size:14px; color:var(--ink-soft);
+    text-align:right; min-height:17px; overflow-wrap:anywhere;
   }
   .result{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:38px;
-    font-weight:500;
-    text-align:right;
-    letter-spacing:-0.01em;
+    font-family:'Special Elite', monospace;
+    font-size:36px; text-align:right; letter-spacing:-0.01em;
     overflow-wrap:anywhere;
   }
   .keys{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:9px;
+    background: var(--housing);
+    padding:16px 12px;
+    display:grid; grid-template-columns:repeat(4,1fr); gap:10px;
+    border-left:1px solid #0e2018; border-right:1px solid #0e2018;
   }
   button.key{
-    font-family:'Space Grotesk', sans-serif;
-    font-size:18px;
-    padding:16px 0;
-    border-radius:10px;
-    border:1px solid var(--panel-edge);
-    background:var(--panel);
-    color:var(--text);
-    cursor:pointer;
-    transition: transform .06s ease, background .15s ease;
+    font-family:'Space Grotesk', sans-serif; font-weight:500; font-size:17px;
+    aspect-ratio:1; border-radius:50%; border:none; cursor:pointer;
+    background: radial-gradient(circle at 32% 28%, #fbf6ea, #e7dcc3 75%);
+    color: var(--ink);
+    box-shadow: 0 4px 0 #b7a97f, inset 0 1px 0 rgba(255,255,255,0.6);
   }
-  button.key:active{ transform: scale(0.96); }
-  button.key.op{ background:var(--op); color:var(--op-text); }
-  button.key.accent{ background:var(--accent); color:#1a1204; border-color:var(--accent); font-weight:600; }
-  button.key.wide{ grid-column: span 2; }
-  button.key.ghost{ color:var(--danger); border-color:var(--danger); background:transparent; }
-  .history{
-    margin-top:18px;
+  button.key:active{ transform: translateY(3px); box-shadow: 0 1px 0 #b7a97f; }
+  button.key.op{
+    background: radial-gradient(circle at 32% 28%, var(--key-hi), var(--key-body) 75%);
+    color:#d9e8de;
+    box-shadow: 0 4px 0 #0e2018, inset 0 1px 0 rgba(255,255,255,0.1);
   }
-  .history-head{
-    display:flex;
-    justify-content:space-between;
-    align-items:baseline;
+  button.key.op:active{ box-shadow: 0 1px 0 #0e2018; }
+  button.key.accent{
+    background: radial-gradient(circle at 32% 28%, #e3a75c, var(--brass) 75%);
+    color:#2a1a04;
+    box-shadow: 0 4px 0 var(--brass-dark), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  button.key.accent:active{ box-shadow: 0 1px 0 var(--brass-dark); }
+  button.key.wide{ aspect-ratio:auto; border-radius:24px; grid-column:span 2; }
+  button.key.ghost{
+    background: radial-gradient(circle at 32% 28%, #c97456, var(--danger) 75%);
+    color:#2a0e04;
+    box-shadow: 0 4px 0 #7a3d28, inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  button.key.ghost:active{ box-shadow: 0 1px 0 #7a3d28; }
+  .roll{
+    background: var(--paper); color: var(--ink);
+    padding: 14px 16px 16px;
+    border-radius: 0 0 6px 6px;
+  }
+  .roll-head{
+    display:flex; justify-content:space-between; align-items:baseline;
     margin-bottom:8px;
   }
-  .history-title{
-    font-size:12px;
-    color:var(--muted);
-  }
+  .roll-title{ font-size:12px; color:var(--ink-soft); }
   .clear-history{
-    background:none;
-    border:none;
-    color:var(--danger);
-    font-family:'Space Grotesk', sans-serif;
-    font-size:12px;
-    cursor:pointer;
-    padding:2px 4px;
+    background:none; border:none; color:var(--danger);
+    font-family:'Space Grotesk', sans-serif; font-size:12px; cursor:pointer; padding:2px 4px;
   }
   .history-list{
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    max-height:140px;
-    overflow-y:auto;
+    display:flex; flex-direction:column; gap:6px;
+    max-height:130px; overflow-y:auto;
+    font-family:'Special Elite', monospace;
   }
   .history-item{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:13px;
-    color:var(--muted);
-    display:flex;
-    justify-content:space-between;
-    border-bottom:1px solid var(--panel-edge);
-    padding-bottom:6px;
+    font-size:12.5px; display:flex; justify-content:space-between;
+    border-bottom:1px dashed var(--paper-edge); padding-bottom:5px; color:var(--ink-soft);
   }
-  .history-item span:last-child{ color:var(--text); }
-  .history-empty{
-    font-size:12.5px;
-    color:var(--muted);
-    font-style:italic;
-    padding:4px 0;
-  }
+  .history-item span:last-child{ color:var(--ink); }
+  .history-empty{ font-size:12px; font-style:italic; color:var(--ink-soft); }
   .hint{
-    margin-top:12px;
-    font-size:11.5px;
-    color:var(--muted);
-    text-align:center;
-    line-height:1.5;
+    margin-top:12px; font-size:11px; color:#a89873;
+    text-align:center; line-height:1.5;
   }
   ::-webkit-scrollbar{ width:6px; }
-  ::-webkit-scrollbar-thumb{ background:var(--panel-edge); border-radius:3px; }
+  ::-webkit-scrollbar-thumb{ background:var(--paper-edge); border-radius:3px; }
 </style>
 </head>
 <body>
 
 <div class="app">
-  <div class="label-row">
-    <div class="app-name"><b>Smart</b> Voice Calculator</div>
-    <div class="icon-btns">
-      <button class="icon-btn" id="speakBtn" title="Repeat answer" aria-label="Repeat answer">
+  <div class="plate">
+    <div class="plate-text"><b>Smart</b> Voice Calculator</div>
+    <div class="levers">
+      <button class="lever" id="speakBtn" title="Repeat answer" aria-label="Repeat answer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="4 8 8 8 13 4 13 20 8 16 4 16 4 8"></polygon>
           <path d="M17 8a5 5 0 0 1 0 8"></path>
           <path d="M19.5 5.5a9 9 0 0 1 0 13"></path>
         </svg>
       </button>
-      <button class="icon-btn" id="micBtn" title="Speak a calculation" aria-label="Start voice input">
+      <button class="lever" id="micBtn" title="Speak a calculation" aria-label="Start voice input">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
           <path d="M19 10v1a7 7 0 0 1-14 0v-1"></path>
@@ -205,11 +168,12 @@
     </div>
   </div>
 
-  <div class="display">
+  <div class="tape">
     <div class="heard" id="heard"></div>
     <div class="expression" id="expression">0</div>
     <div class="result" id="result">0</div>
   </div>
+  <div class="perf-bottom"></div>
 
   <div class="keys" id="keys">
     <button class="key ghost" data-action="clear">C</button>
@@ -237,15 +201,16 @@
     <button class="key accent" data-action="equals">=</button>
   </div>
 
-  <div class="history">
-    <div class="history-head">
-      <div class="history-title">History</div>
+  <div class="perf-bottom"></div>
+  <div class="roll">
+    <div class="roll-head">
+      <div class="roll-title">History</div>
       <button class="clear-history" id="clearHistoryBtn">Clear</button>
     </div>
     <div class="history-list" id="historyList"></div>
   </div>
 
-  <div class="hint">Tap the mic and say something like "twelve plus eight". Tap the speaker icon anytime to hear the current answer again.</div>
+  <div class="hint">Tap the mic and say something like "twelve plus eight". Tap the speaker lever to hear the answer again.</div>
 </div>
 
 <script>
@@ -266,14 +231,11 @@
     const val = safeEval(expr);
     resultEl.textContent = val === null ? '' : formatNum(val);
   }
-
   function formatNum(n){
     if (!isFinite(n)) return 'Error';
     const rounded = Math.round(n * 1e9) / 1e9;
     return rounded.toString();
   }
-
-  // --- Safe expression evaluator (recursive descent, no eval()) ---
   function safeEval(str){
     if (!str) return null;
     try{
@@ -326,7 +288,6 @@
     return parseFloat(tok);
   }
 
-  // --- Keypad ---
   keys.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
@@ -339,19 +300,16 @@
     render();
   });
 
-  // commit() computes the result, saves it to history, and speaks it aloud —
-  // used by both the keypad "=" button and by voice input.
-  function commit(){
+  function commit(fromVoice){
     const val = safeEval(expr);
     if (val === null || expr === '') return;
     const formatted = formatNum(val);
     addHistory(expr, formatted);
     expr = formatted;
     render();
-    speak(formatted);
+    speak(fromVoice ? ('The answer is ' + formatted) : formatted);
   }
 
-  // --- History ---
   function addHistory(exp, val){
     const list = JSON.parse(localStorage.getItem('svc_history') || '[]');
     list.unshift({exp, val});
@@ -376,7 +334,6 @@
     renderHistory();
   });
 
-  // --- Text-to-speech: repeat / speak the current answer ---
   function speak(text){
     if (!('speechSynthesis' in window) || !text) return;
     const utter = new SpeechSynthesisUtterance(text);
@@ -389,7 +346,6 @@
     speak(current);
   });
 
-  // --- Voice recognition ---
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   let recognizing = false;
   let recognition = null;
@@ -420,7 +376,7 @@
       const parsed = wordsToExpression(said);
       if (parsed){
         expr = parsed;
-        commit(); // commit() already speaks the result
+        commit(true);
       } else {
         heardEl.textContent = '"' + said + '" — didn\'t catch a calculation.';
       }
@@ -435,10 +391,8 @@
     else recognition.start();
   });
 
-  // Convert spoken words to a math expression string
   function wordsToExpression(said){
     let s = ' ' + said.toLowerCase().trim() + ' ';
-
     const numberWords = {
       zero:'0', one:'1', two:'2', three:'3', four:'4', five:'5', six:'6',
       seven:'7', eight:'8', nine:'9', ten:'10', eleven:'11', twelve:'12',
@@ -447,7 +401,6 @@
       fifty:'50', sixty:'60', seventy:'70', eighty:'80', ninety:'90'
     };
     const scaleWords = { hundred:100, thousand:1000, million:1000000 };
-
     const opReplacements = [
       [/\bdivided by\b/g, ' / '],
       [/\bdivide by\b/g, ' / '],
@@ -466,7 +419,6 @@
       [/\bclose bracket\b/g, ' ) ']
     ];
     for (const [re, rep] of opReplacements) s = s.replace(re, rep);
-
     s = s.replace(/\band\b/g, ' ');
     const tokens = s.split(/\s+/).filter(Boolean);
     const out = [];
@@ -492,11 +444,9 @@
       }
     }
     let joined = out.join(' ');
-
     joined = joined.replace(/(\d)\s*\.\s*(\d)/g, '$1.$2');
     joined = joined.replace(/[^0-9+\-*/%.() ]/g, ' ');
     joined = joined.replace(/\s+/g, ' ').trim();
-
     return safeEval(joined) !== null ? joined : null;
   }
 
